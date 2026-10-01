@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gasto urinario y balance neonatal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF3F6; --surface:#FFFFFF; --ink:#17283A; --muted:#5B6B7B; --line:#D3DDE4; --band:#E3EBF0;
+  --accent:#2F7D8C; --ok:#3E8E5E; --warn:#C98A1B; --bad:#B8433A; --poly:#6A5AA8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101A23; --surface:#18252F; --ink:#E4ECF1; --muted:#97A7B4; --line:#2A3A47; --band:#21313D;
+    --accent:#5FB3C2; --ok:#62B583; --warn:#E0AA48; --bad:#E07A70; --poly:#9A8BDB;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101A23; --surface:#18252F; --ink:#E4ECF1; --muted:#97A7B4; --line:#2A3A47; --band:#21313D;
+  --accent:#5FB3C2; --ok:#62B583; --warn:#E0AA48; --bad:#E07A70; --poly:#9A8BDB;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.45}
+main{max-width:760px;margin:0 auto;padding:20px 14px 40px}
+h1{font-size:1.55rem;line-height:1.15;margin:4px 0 4px}
+.sub{color:var(--muted);margin:0 0 18px;font-size:.95rem}
+fieldset{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px;margin:0 0 14px;min-width:0}
+legend{font-weight:700;padding:0 6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label,.lab{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+input[type=text],select{width:100%;font:inherit;font-size:1.05rem;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+input:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.check{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:.92rem}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent)}
+.radios{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;align-items:center}
+.radios label{display:flex;gap:6px;align-items:center;color:var(--ink);margin:0}
+.radios input{accent-color:var(--accent);width:18px;height:18px}
+.hint{font-size:.83rem;color:var(--muted);margin:8px 0 0}
+.note{font-size:.88rem;color:var(--muted);margin:10px 0 0;font-variant-numeric:tabular-nums}
+
+/* Hoja tipo registro de enfermería */
+.sheetwrap{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:0 0 14px;overflow:hidden}
+.sheethead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px 8px;flex-wrap:wrap}
+.sheethead strong{font-size:1rem}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.sh{border-collapse:separate;border-spacing:0;font-size:.9rem;font-variant-numeric:tabular-nums}
+.sh th,.sh td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0;text-align:center;min-width:52px;height:38px}
+.sh th:first-child,.sh td:first-child{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;
+  min-width:132px;max-width:132px;padding:0 8px;border-right:2px solid var(--line)}
+.sh thead th{background:var(--band);font-weight:700;height:32px}
+.sh thead th:first-child{background:var(--band)}
+.sh .sec td{background:var(--band);font-weight:700;text-align:left;padding:4px 8px;height:30px;font-size:.85rem}
+.sh .sec td:first-child{background:var(--band)}
+.sh td input{width:52px;height:37px;border:0;border-radius:0;background:transparent;text-align:center;padding:0 2px;font-size:.95rem}
+.sh td input:focus{background:var(--bg)}
+.sh td:first-child input{width:100%;text-align:left;padding:0;font-size:.88rem}
+.sh .tot td{font-weight:700;background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.sh .tot td:first-child{background:color-mix(in srgb,var(--accent) 9%,var(--surface));font-size:.82rem;line-height:1.15}
+.sh .gu td{font-weight:700}
+.sh .gu td:first-child{font-size:.82rem;line-height:1.15}
+.sh td.cut,.sh th.cut{box-shadow:inset 0 -3px 0 var(--accent)}
+.sh td.off{color:var(--muted);opacity:.5}
+.neg{color:var(--bad)}
+.rowtools{display:flex;gap:4px;align-items:center}
+.mini{font:inherit;font-size:.75rem;border:1px solid var(--line);background:transparent;color:var(--accent);
+  border-radius:6px;padding:2px 6px;cursor:pointer;white-space:nowrap}
+.mini.del{color:var(--muted)}
+.addrow{display:flex;gap:8px;padding:10px 14px 14px;flex-wrap:wrap}
+.add{font:inherit;font-size:.9rem;border:1px dashed var(--accent);color:var(--accent);background:transparent;
+  border-radius:10px;padding:8px 12px;cursor:pointer}
+
+/* Resultado */
+.result{background:var(--surface);border-radius:14px;padding:18px 16px;border:2px solid var(--line)}
+.result.ok{border-color:var(--ok)} .result.warn{border-color:var(--warn)}
+.result.bad{border-color:var(--bad)} .result.poly{border-color:var(--poly)}
+.big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.big strong{font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
+.big span{color:var(--muted)}
+.verdict{font-weight:700;font-size:1.15rem;margin:8px 0 2px}
+.ok .verdict{color:var(--ok)} .warn .verdict{color:var(--warn)} .bad .verdict{color:var(--bad)} .poly .verdict{color:var(--poly)}
+.gauge{position:relative;margin:22px 0 6px;height:14px;display:flex}
+.gauge i{display:block;height:100%}
+.gauge i:first-child{border-radius:7px 0 0 7px} .gauge i:last-of-type{border-radius:0 7px 7px 0}
+.marker{position:absolute;top:-8px;width:4px;height:30px;background:var(--ink);border-radius:2px;transform:translateX(-2px);transition:left .35s ease}
+@media (prefers-reduced-motion:reduce){.marker{transition:none}}
+.ticks{position:relative;height:18px;font-size:.75rem;color:var(--muted)}
+.ticks b{position:absolute;font-weight:400;transform:translateX(-50%)}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+@media (max-width:520px){.cols{grid-template-columns:1fr}}
+.box{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.box h2{font-size:.9rem;margin:0 0 4px;color:var(--muted);font-weight:700}
+.box .v{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.box p{margin:2px 0 0;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);margin:0}
+.reset{font:inherit;font-size:.9rem;margin-top:16px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:9px 14px;cursor:pointer}
+details{margin-top:18px;font-size:.9rem;color:var(--muted)}
+summary{cursor:pointer;color:var(--ink);font-weight:700}
+details table{width:100%;border-collapse:collapse;margin-top:8px}
+details td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+</style>
+</head>
+<body>
+<main>
+  <h1>Gasto urinario y balance neonatal</h1>
+  <p class="sub">Misma estructura del registro diario de enfermería: administración, eliminación, totales acumulados por hora y gasto urinario.</p>
+
+  <fieldset>
+    <legend>Paciente</legend>
+    <div class="grid">
+      <div><label for="peso">Peso actual (g)</label><input id="peso" type="text" inputmode="decimal" placeholder="Ej. 1935"></div>
+      <div><label for="pnto">Peso al nacer, PNTO (g)</label><input id="pnto" type="text" inputmode="decimal" placeholder="Ej. 2050"></div>
+    </div>
+    <div class="radios"><span class="lab" style="margin:0">Peso para el cálculo:</span>
+      <label><input type="radio" name="pref" value="actual" checked> Actual</label>
+      <label><input type="radio" name="pref" value="nacer"> Al nacer</label>
+    </div>
+    <p class="note" id="varPeso"></p>
+    <div class="grid" style="margin-top:12px">
+      <div><label for="inicio">La hoja empieza a las</label><select id="inicio"></select></div>
+      <div><label for="corte">Calcular hasta la hora</label><select id="corte"></select></div>
+    </div>
+    <label class="check"><input type="checkbox" id="primeras24"> Primeras 24 h de vida (umbral de oliguria &lt; 0,5 mL/kg/h)</label>
+  </fieldset>
+
+  <div class="sheetwrap">
+    <div class="sheethead"><strong>Registro horario (mL)</strong><span class="hint" style="margin:0">Desliza la tabla a los lados</span></div>
+    <div class="scroll"><table class="sh" id="sh"></table></div>
+    <div class="addrow">
+      <button type="button" class="add" id="addAdm">Añadir fila de administración</button>
+      <button type="button" class="add" id="addEli">Añadir fila de eliminación</button>
+    </div>
+  </div>
+
+  <section class="result" id="res" aria-live="polite"></section>
+
+  <button type="button" class="reset" id="reset">Borrar todo y empezar una hoja nueva</button>
+
+  <details>
+    <summary>Criterios y fórmulas</summary>
+    <table>
+      <tr><td>&gt; 4 mL/kg/h</td><td>Poliuria</td></tr>
+      <tr><td>1–4 mL/kg/h</td><td>Rango esperado</td></tr>
+      <tr><td>0,5–1 mL/kg/h</td><td>Oliguria · KDIGO neonatal estadio 1 si persiste 24 h</td></tr>
+      <tr><td>0,3–0,5 mL/kg/h</td><td>KDIGO neonatal estadio 2 si persiste 24 h</td></tr>
+      <tr><td>≤ 0,3 mL/kg/h</td><td>KDIGO neonatal estadio 3 si persiste 24 h</td></tr>
+    </table>
+    <p>Total acumulado = suma de todas las filas desde el inicio de la hoja hasta esa hora. Balance = administración acumulada − eliminación acumulada (no incluye pérdidas insensibles). Gasto urinario = orina acumulada ÷ peso (kg) ÷ horas transcurridas. Líquidos totales = administración ÷ peso (kg) ÷ horas × 24. «Llenar» copia el primer valor de la fila en las casillas vacías hasta la hora de cálculo. Herramienta de apoyo; no reemplaza el juicio clínico.</p>
+  </details>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const parse = v => { v = String(v ?? '').trim().replace(/\s/g,'').replace(',', '.'); return v === '' ? NaN : parseFloat(v); };
+const fmt = (n, d=1) => (Math.abs(n) < 1e-9 ? 0 : n).toLocaleString('es-CO', {minimumFractionDigits:d, maximumFractionDigits:d});
+const sgn = n => (n > 0 ? '+' : '') + fmt(n);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const KEY = 'gu-neonatal-v3', NH = 24;
+
+let state = {
+  peso:'', pnto:'', pref:'actual', p24:false, inicio:7, corte:'auto',
+  adm:[{n:'DAD 10 %', v:{}}, {n:'Leche materna / fórmula', v:{}}],
+  eli:[{n:'Orina', v:{}, fixed:true}, {n:'Sonda gástrica', v:{}}, {n:'Deposiciones', v:{}}]
+};
+function load(){ try{ const s = JSON.parse(localStorage.getItem(KEY)); if (s) state = Object.assign(state, s); }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+const hora = i => (state.inicio + i) % 24;   // columna i -> hora del reloj
+const val = (row, i) => parse(row.v[hora(i)]);
+
+function lastData(){
+  let last = -1;
+  for (let i=0;i<NH;i++) for (const r of [...state.adm, ...state.eli]) if (!isNaN(val(r,i))) last = i;
+  return last;
+}
+const corteIdx = () => state.corte === 'auto' ? lastData() : +state.corte;
+
+function buildSelects(){
+  $('inicio').innerHTML = Array.from({length:24},(_,h)=>`<option value="${h}">${h}:00</option>`).join('');
+  $('inicio').value = state.inicio;
+  buildCorte();
+}
+function buildCorte(){
+  let o = '<option value="auto">Automático (última hora con datos)</option>';
+  for (let i=0;i<NH;i++) o += `<option value="${i}">${hora(i)} (${i+1} h)</option>`;
+  $('corte').innerHTML = o;
+  $('corte').value = state.corte;
+}
+
+function rowHTML(sec, idx, r){
+  const name = r.fixed ? `<span>${esc(r.n)}</span>`
+    : `<input type="text" data-name="${sec}:${idx}" value="${esc(r.n)}" aria-label="Nombre de la fila">`;
+  const tools = `<div class="rowtools">${name}</div>
+    <div class="rowtools" style="margin:2px 0 4px"><button type="button" class="mini" data-fill="${sec}:${idx}">Llenar</button>${r.fixed?'':`<button type="button" class="mini del" data-del="${sec}:${idx}" aria-label="Quitar fila">Quitar</button>`}</div>`;
+  let cells = '';
+  for (let i=0;i<NH;i++) cells += `<td data-col="${i}"><input type="text" inputmode="decimal" data-cell="${sec}:${idx}:${i}" value="${esc(r.v[hora(i)])}" aria-label="${esc(r.n)} hora ${hora(i)}"></td>`;
+  return `<tr><td>${tools}</td>${cells}</tr>`;
+}
+function calcRow(id, label){
+  let c = ''; for (let i=0;i<NH;i++) c += `<td data-col="${i}" id="${id}-${i}"></td>`;
+  return `<td>${label}</td>${c}`;
+}
+function buildSheet(){
+  let h = '<thead><tr><th>Hora</th>';
+  for (let i=0;i<NH;i++) h += `<th data-col="${i}">${hora(i)}</th>`;
+  h += '</tr></thead><tbody>';
+  h += `<tr class="sec"><td>Administración</td><td colspan="${NH}"></td></tr>`;
+  state.adm.forEach((r,i)=> h += rowHTML('adm', i, r));
+  h += `<tr class="tot">${calcRow('ta','Total acumulado administración')}</tr>`;
+  h += `<tr class="sec"><td>Eliminación</td><td colspan="${NH}"></td></tr>`;
+  state.eli.forEach((r,i)=> h += rowHTML('eli', i, r));
+  h += `<tr class="tot">${calcRow('te','Total acumulado eliminación')}</tr>`;
+  h += `<tr class="tot">${calcRow('tb','Balance acumulado')}</tr>`;
+  h += `<tr class="gu">${calcRow('tg','Gasto urinario (mL/kg/h)')}</tr>`;
+  h += '</tbody>';
+  $('sh').innerHTML = h;
+
+  $('sh').querySelectorAll('[data-cell]').forEach(inp => inp.oninput = () => {
+    const [sec, idx, i] = inp.dataset.cell.split(':');
+    state[sec][+idx].v[hora(+i)] = inp.value; save(); calc();
+  });
+  $('sh').querySelectorAll('[data-name]').forEach(inp => inp.oninput = () => {
+    const [sec, idx] = inp.dataset.name.split(':'); state[sec][+idx].n = inp.value; save();
+  });
+  $('sh').querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    const [sec, idx] = b.dataset.del.split(':');
+    if (!confirm('¿Quitar esta fila y sus datos?')) return;
+    state[sec].splice(+idx, 1); save(); buildSheet(); calc();
+  });
+  $('sh').querySelectorAll('[data-fill]').forEach(b => b.onclick = () => {
+    const [sec, idx] = b.dataset.fill.split(':'); const r = state[sec][+idx];
+    let first = NaN; for (let i=0;i<NH && isNaN(first);i++) first = val(r,i);
+    if (isNaN(first)){ alert('Escribe primero un valor en esta fila.'); return; }
+    let hasta = state.corte === 'auto' ? lastData() : +state.corte;
+    if (hasta < 0) hasta = NH - 1;
+    for (let i=0;i<=hasta;i++) if (isNaN(val(r,i))) r.v[hora(i)] = String(first).replace('.', ',');
+    save(); buildSheet(); calc();
+  });
+}
+
+function clasificar(v, p24){
+  const lim = p24 ? 0.5 : 1;
+  if (v > 4) return {c:'poly', t:'Poliuria'};
+  if (v >= lim) return {c:'ok', t:'Diuresis adecuada'};
+  if (v > 0.5) return {c:'warn', t:'Oliguria', k:'Equivale a KDIGO neonatal estadio 1 si se mantiene 24 h'};
+  if (v > 0.3) return {c: p24 ? 'warn':'bad', t: p24 ? 'Oliguria' : 'Oliguria moderada', k:'Equivale a KDIGO neonatal estadio 2 si se mantiene 24 h'};
+  return {c:'bad', t:'Oliguria grave / anuria', k:'Equivale a KDIGO neonatal estadio 3 si se mantiene 24 h'};
+}
+
+function calc(){
+  const toKg = g => g > 0 && g < 20 ? g : g / 1000;
+  const pa = toKg(parse(state.peso)), pn = toKg(parse(state.pnto));
+  $('varPeso').textContent = (pa > 0 && pn > 0)
+    ? `Variación respecto al nacimiento: ${pa>=pn?'+':''}${fmt((pa-pn)/pn*100,1)} % (${pa>=pn?'+':''}${fmt((pa-pn)*1000,0)} g)` : '';
+  let peso = state.pref === 'nacer' && pn > 0 ? pn : pa;
+  if (!(peso > 0)) peso = pn;
+
+  const last = lastData(), corte = corteIdx();
+  let A = 0, E = 0, O = 0;
+  const porFila = {adm: state.adm.map(()=>0), eli: state.eli.map(()=>0)};
+  let Ac = 0, Ec = 0, Oc = 0;
+
+  for (let i=0;i<NH;i++){
+    state.adm.forEach((r,k)=>{ const x = val(r,i); if (!isNaN(x)){ A += x; if (i<=corte) porFila.adm[k] += x; } });
+    state.eli.forEach((r,k)=>{ const x = val(r,i); if (!isNaN(x)){ E += x; if (r.fixed) O += x; if (i<=corte) porFila.eli[k] += x; } });
+    if (i === corte){ Ac = A; Ec = E; Oc = O; }
+    const show = i <= last;
+    const put = (id, txt, cls='') => { const el = $(`${id}-${i}`); el.textContent = show ? txt : ''; el.className = cls; };
+    put('ta', fmt(A)); put('te', fmt(E));
+    put('tb', sgn(A - E), A - E < 0 ? 'neg' : '');
+    put('tg', peso > 0 ? fmt(O / peso / (i+1), 2) : '–');
+    document.querySelectorAll(`[data-col="${i}"]`).forEach(td => {
+      td.classList.toggle('cut', i === corte);
+      if (!td.querySelector('input')) td.classList.toggle('off', corte >= 0 && i > corte);
+    });
+  }
+
+  const res = $('res');
+  const faltan = [];
+  if (!(peso > 0)) faltan.push('el peso');
+  if (corte < 0) faltan.push('al menos un dato en la hoja');
+  if (faltan.length){ res.className = 'result'; res.innerHTML = `<p class="empty">Falta ${faltan.join(' y ')} para calcular.</p>`; return; }
+
+  const horas = corte + 1;
+  const gu = Oc / peso / horas, bal = Ac - Ec;
+  const k = clasificar(gu, state.p24);
+  const max = 6, pos = Math.min(gu, max)/max*100, lim = state.p24 ? 0.5 : 1;
+  const z = (a,b,col) => `<i style="width:${(b-a)/max*100}%;background:var(${col})"></i>`;
+  const gauge = state.p24 ? z(0,.3,'--bad')+z(.3,.5,'--warn')+z(.5,4,'--ok')+z(4,6,'--poly')
+                          : z(0,.5,'--bad')+z(.5,1,'--warn')+z(1,4,'--ok')+z(4,6,'--poly');
+  const ticks = [0,lim,4,6].map(t=>`<b style="left:${t/max*100}%">${fmt(t, t%1?1:0)}</b>`).join('');
+  const det = (sec) => state[sec].map((r,k)=> porFila[sec][k] ? `<p>${esc(r.n)||'Sin nombre'}: ${fmt(porFila[sec][k])} mL</p>` : '').join('');
+
+  res.className = 'result ' + k.c;
+  res.innerHTML = `
+    <div class="big"><strong>${fmt(gu,2)}</strong><span>mL/kg/h de gasto urinario</span></div>
+    <p class="verdict">${k.t}</p>
+    ${k.k ? `<p class="hint" style="margin-top:2px">${k.k}</p>` : ''}
+    <div class="gauge" aria-hidden="true">${gauge}<span class="marker" style="left:${pos}%"></span></div>
+    <div class="ticks" aria-hidden="true">${ticks}</div>
+    <p class="note">${horas} h, de ${hora(0)}:00 a ${(hora(corte)+1)%24}:00. Peso usado: ${fmt(peso*1000,0)} g. Orina: ${fmt(Oc)} mL (${fmt(Oc/horas)} mL/h).</p>
+    <div class="cols">
+      <div class="box"><h2>Administración</h2><div class="v">${fmt(Ac)} mL</div>${det('adm')}<p>${fmt(Ac/peso/horas*24)} mL/kg/día</p></div>
+      <div class="box"><h2>Eliminación</h2><div class="v">${fmt(Ec)} mL</div>${det('eli')}</div>
+      <div class="box"><h2>Balance</h2><div class="v ${bal<0?'neg':''}">${sgn(bal)} mL</div><p>${sgn(bal/peso)} mL/kg</p></div>
+    </div>`;
+}
+
+function bind(){
+  $('peso').value = state.peso; $('pnto').value = state.pnto; $('primeras24').checked = state.p24;
+  document.querySelector(`input[name=pref][value=${state.pref}]`).checked = true;
+  $('peso').oninput = e => { state.peso = e.target.value; save(); calc(); };
+  $('pnto').oninput = e => { state.pnto = e.target.value; save(); calc(); };
+  $('primeras24').onchange = e => { state.p24 = e.target.checked; save(); calc(); };
+  document.querySelectorAll('input[name=pref]').forEach(r => r.onchange = () => { state.pref = r.value; save(); calc(); });
+  $('inicio').onchange = e => { state.inicio = +e.target.value; buildCorte(); buildSheet(); save(); calc(); };
+  $('corte').onchange = e => { state.corte = e.target.value; save(); calc(); };
+  $('addAdm').onclick = () => { state.adm.push({n:'', v:{}}); save(); buildSheet(); calc(); };
+  $('addEli').onclick = () => { state.eli.push({n:'', v:{}}); save(); buildSheet(); calc(); };
+  $('reset').onclick = () => { if (!confirm('¿Borrar todos los datos de la hoja?')) return;
+    try{ localStorage.removeItem(KEY); }catch(e){} location.reload(); };
+}
+
+load(); buildSelects(); buildSheet(); bind(); calc();
+</script>
+</body>
+</html>
